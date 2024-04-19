@@ -24,7 +24,7 @@ Uncompressed both with xz:
   %  xz -d -c AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz > \
 		/work/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw
 ----
-and use the loop devices to look at the images:
+and used the loop devices to look at the images:
 ----
   #  losetup -P /dev/loop0 /work/2024-03-15-raspios-bookworm-arm64.img
   #  losetup -P /dev/loop1 /work/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw
@@ -160,7 +160,7 @@ Look at /al/etc/fstab
 ----
 Note:
   a) first partition is mounted under /boot
-  2) swap is a file 
+  b) swap is a file 
 
 Mounting /dev/loop1p1 on /al/boot shows a normal looking /boot
 but config.txt is empty and a /boot/grub/ directory with a default
@@ -176,7 +176,7 @@ At this point I don't want /al/boot so I deleted the contents
 ----
 Note: I could reformat the partition with mkfs.vfat(8)
 
-and recreate the raspios arrangement
+Recreate the raspios arrangement
 ----
   # mkdir /al/boot/firmware
   # mount /dev/loop1p1 /al/boot/firmware
@@ -186,9 +186,9 @@ and recreate the raspios arrangement
 
 Now we are using a different kernel (6.6 cf 6.1) and firmware and have to modify
 the AL8 root file system.
-i)    /lib/modules (modules-load.d is empty on both)
-ii)   /lib/firmware
-iii)  /lib/modprobe.d
+a)  /lib/modules (modules-load.d is empty on both)
+b)  /lib/firmware
+c)  /lib/modprobe.d
 
 The plan is to move the AL8 versions of -el8 and copy the
 contents of the PiOS versions to the location.
@@ -200,14 +200,15 @@ contents of the PiOS versions to the location.
 	tar -C /al/lib -xv -p -S --selinux --xattrs -f -
 ----
 Under /etc we have
-i)   /etc/modprobe.d
-ii)  /etc/modules-load.d
-iii) /etc/modules (on PiOS)
+a)  /etc/modprobe.d
+b)  /etc/modules-load.d
+c)  /etc/modules (on PiOS)
 
 On AL8 modprobe.d has two entries - for tuned and firewalld 
-which could be left but will disable. On PiOS there are
+which could be left but we will disable. On PiOS there are
 module blacklist which we will use.
 On AL8 modules-load.d is empty.
+
 ----
   # mv /al/etc/modprobe.d /al/etc/modprobe.d-el8
   # mv /al/etc/modules-load.d /al/etc/modules-load.d-el8
@@ -220,9 +221,8 @@ Note: /etc/modules-load.d/modules.conf -> /etc/modules
 Clean up mess
 -------------
 Have to reconfigure AL8 for these changes
-i)   /al/boot/firmware/cmdline.txt
-ii)  /al/etc/fstab
-iii)
+a)  /al/boot/firmware/cmdline.txt
+b)  /al/etc/fstab
 
 Will change cmdline.txt to reflect AL8 root partition UUID
 and remove unused options
@@ -233,8 +233,12 @@ and remove unused options
   rootfstype=ext4 fsck.repair=yes rootwait noquiet nosplash \
   plymouth.ignore-serial-consoles
 ----
-I get "Unknown kernel command line parameters "noquiet", will be passed to user space."
-error message so probably can remove this.
+I get an error message for "noquiet" in dmesg:
+----
+	Unknown kernel command line parameters "noquiet",
+	 will be passed to user space."
+----
+so probably can be removed.
 
 Replace /etc/fstab on Al8
 
@@ -249,6 +253,7 @@ Optionally remove the unused /al/swapfile as well.
 
 At this point the system would probably boot but a few other things 
 can be fixed at this point.
+
 The wifi firmware has to load the regulatory.db which on PiOS
 uses the /etc/alternatives arrangement (why?)
 ----
@@ -262,21 +267,23 @@ and from /etc/alternatives
 /etc/alternatives/regulatory.db.p7s -> /lib/firmware/regulatory.db.p7s-debian
 /etc/alternatives/cyfmac43455-sdio.bin -> /lib/firmware/cypress/cyfmac43455-sdio-standard.bin
 ----
-We could just remove the link chain but will follow PiOS.
+
+We could just replace the link chain but will follow PiOS.
 ----
  #  ln -s /lib/firmware/regulatory.db-debian /al/etc/alternatives
  #  ln -s /lib/firmware/regulatory.db.p7s-debian /al/etc/alternatives
  #  ln -s /lib/firmware/cypress/cyfmac43455-sdio-standard.bin /al/etc/alternatives
 ----
-Note: these symlinks won't point to anything in this environment
-      until you chroot or boot.
+Note: these symlinks will be dangling in this environment until you chroot or boot.
 
 Fix localtime on AL8
 ----
  #  ln -f -s /usr/lib/zoneinfo/Australia/Sydney /al/etc/localtime
 ----
 
-Edit yum.conf to prevent linux-firmware to update
+Edit yum.conf to prevent linux-firmware from updating and trashing
+the /usr/lib/firmware from PiOS.
+
 /al/etc/yum.conf
 ----
 	[main]
@@ -296,9 +303,9 @@ ie
 
 At this point unless you are running on a Pi its difficult to make
 further changes.
-i)   remove the cloud-init service and package
-ii)  change the root password
-iii) add new account add to wheel group for sudo
+a)  remove the cloud-init service and package
+b)  change the root password
+c)  add new account add to wheel group for sudo
 
 If you are running under PiOS etc you can
 ----
@@ -314,6 +321,7 @@ If you are running under PiOS etc you can
  ...
  #  exit
 -----
+
 otherwise umount the images
 ----
   # umount /pi/boot/firmware
@@ -332,9 +340,9 @@ with the usual warning about the right $SDCARD_DEVICE. :)
 	of=/dev/$SDCARD_DEVICE bs=1024k
 ----
 
-I put my sdcard in a USB adaptor and inserted into a Pi run PiOS
-and mount the partitions on the Pi and chrooted into it to make
-the modifications above.
+I put my sdcard in a USB adaptor and inserted it into a Pi running
+PiOS and mounted the partitions on the Pi and chrooted into it
+to make the modifications above.
 
 Should be able to boot off the sdcard now.
 I noticed that my install the sshd_config was modified (at boot?)
@@ -346,6 +354,7 @@ to disallow password authentication.
 	....
 ----
 Until you have keys or certificates setup change this to 'yes'
+
 I also ran authselect for the minimal configuration
 ----
  #  authselect select minimal
@@ -353,7 +362,7 @@ I also ran authselect for the minimal configuration
 
 Further stuff
 -------------
-Sudo should permit root access.
+Sudo should permit root access to 'nemo'
 The ethernet largely configures itself if DHCP is available but wifi
 obviously doesn't.
 I use nmtui to configure either but nmcli is another way.
