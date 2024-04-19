@@ -30,6 +30,9 @@ and use the loop devices to look at the images:
   #  losetup -P /dev/loop1 /work/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw
 ----  
 
+Examining the images
+--------------------
+
 Use fdisk (or parted /dev/loop0 print) to list the partitions:
 ----
   # fdisk -l /dev/loop0
@@ -62,6 +65,9 @@ Mount the two systems root file systems (partition 2) under /pi and /al:
   # mount /dev/loop0p2 /pi
   # mount /dev/loop1p2 /al
 ----
+
+Examining the RaspiOS image
+---------------------------
 
 Look at /pi/etc/fstab
 ----
@@ -141,6 +147,103 @@ i) generates a new random disk identifier relabels boot disk
 ------
 ii) updates /etc/fstab and /boot/firmware/cmdline.txt.
 iii) generates new sshd host keys.
+
+Examinig the Almalinux image
+----------------------------
+The /boot directory is empty. 
+Look at /al/etc/fstab
+----
+  % cat /al/etc/fstab
+	UUID=483124e4-c53c-4ad2-86db-a86263aac2b1  / ext4    defaults,noatime 0 0
+	UUID=79FC-5897  /boot vfat    defaults,noatime 0 0
+	/swapfile	none	swap	defaults	0	0
+----
+Note:
+  a) first partition is mounted under /boot
+  2) swap is a file 
+
+Mounting /dev/loop1p1 on /al/boot shows a normal looking /boot
+but config.txt is empty and a /boot/grub/ directory with a default
+entry.
+I have no idea how the Pi boot process gets to grub on a Pi4 
+presumably via bootcode.bin and one of the start*.elf binaries.
+(I should look it up. :)
+
+At this point I don't want /al/boot so I deleted the contents
+----
+  # rm -rf /al/boot/*
+  # umount /al/boot
+----
+Note: I could reformat the partition with mkfs.vfat(8)
+
+and recreate the raspios arrangement
+----
+  # mkdir /al/boot/firmware
+  # mount /dev/loop1p1 /al/boot/firmware
+  # tar -C /pi -c -p -S --selinux --xattrs -f - boot \
+	tar -C /al -xv -p -S --selinux --xattrs -f -
+----
+
+Now we are using a different kernel (6.6 cf 6.1) and firmware and have to modify
+the AL8 root file system.
+i)    /lib/modules (modules-load.d is empty on both)
+ii)   /lib/firmware
+iii)  /lib/modprobe.d
+
+The plan is to move the AL8 versions of -el8 and copy the
+contents of the PiOS versions to the location.
+----
+  # mv /al/lib/modules /al/lib/modules-el8
+  # mv /al/lib/firmware /al/lib/firmware-el8
+  # mv /al/lib/modprobe.d /al/lib/modprobe.d-el8
+  # tar -C /pi/lib -c -p -S --selinux --xattrs -f - modules firmware modprobe.d \
+	tar -C /al/lib -xv -p -S --selinux --xattrs -f -
+----
+Under /etc we have
+i)   /etc/modprobe.d
+ii)  /etc/modules-load.d
+iii) /etc/modules (on PiOS)
+
+On AL8 modprobe.d has two entries - for tuned and firewalld 
+which could be left but will disable. On PiOS there are
+module blacklist which we will use.
+On AL8 modules-load.d is empty.
+----
+  # mv /al/etc/modprobe.d /al/etc/modprobe.d-el8
+  # mv /al/etc/modules-load.d /al/etc/modules-load.d-el8
+  # tar -C /pi/etc -c -p -S --selinux --xattrs -f - modules-load.d modprobe.d modules \
+	tar -C /al/etc -xv -p -S --selinux --xattrs -f -
+----
+Note: /etc/modules-load.d/modules.conf -> /etc/modules
+      and loads i2c-dev which might be use to load firmware at runtime?
+
+Clean up mess
+-------------
+Have to reconfigure AL8 for these changes
+i)   /al/boot/firmware/cmdline.txt
+ii)  /al/etc/fstab
+iii)
+
+Will change cmdline.txt to reflect AL8 root partition UUID
+and remove unused options
+
+/al/boot/firmware/cmdline.txt
+----
+  console=serial0,115200 console=tty1 root=PARTUUID=4ce3562e-02 \
+  rootfstype=ext4 fsck.repair=yes rootwait noquiet nosplash \
+  plymouth.ignore-serial-consoles
+----
+
+Replace /etc/fstab on Al8
+
+/al/etc/fstab
+----
+  PARTUUID=4ce3562e-01  /boot/firmware  vfat    defaults          0       2
+  PARTUUID=4ce3562e-02  /               ext4    defaults,noatime  0       1
+----
+Note: systemd appears to mount /proc anyway so omitted.
+
+Optionally remove the unused /al/swapfile as well.
 
 
 
