@@ -1,7 +1,8 @@
 # Note
 I have Almalinux 8.9 running on RPi5 and I am documenting
 the particular skulduggery required.
-See al89-on-rpi5.txt
+
+See al89-on-rpi5.txt, almalinux89-boot-log.txt and almalinux89-dmesg.txt
 <pre>
 Almalinux 8.9 on Raspberry Pi 5
 ===============================

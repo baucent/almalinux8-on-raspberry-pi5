@@ -376,6 +376,12 @@ Configure the hostname
       Architecture: arm64
 ----
 
+The contents of /var/log/boot.log and dmesg -T are provided
+----
+	almalinux89-boot-log.txt
+	almalinux89-dmesg.txt
+----
+
 [1] https://repo.almalinux.org/almalinux/8/raspberrypi/images/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz
 [2] https://wiki.almalinux.org/documentation/raspberry-pi.html#about-raspberry-pi
 [3] https://www.raspberrypi.com/documentation/computers/os.html
