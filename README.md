@@ -1,3 +1,7 @@
+# Note
+I have Almalinux 8.9 running on RPi5 and I am documenting
+the particular skulduggery required.
+See al89-on-rpi5.txt
 <pre>
 Almalinux 8.9 on Raspberry Pi 5
 ===============================
@@ -14,6 +18,7 @@ Rather than go to the trouble of working out how Debian etc manage
 this I thought I could leverage the working boot process from RaspiOS
 to bring up AL89. Both use systemd and would be similar except for
 the kernel versions and firmware.
+
 
 [1] https://repo.almalinux.org/almalinux/8/raspberrypi/images/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz
 [2] https://wiki.almalinux.org/documentation/raspberry-pi.html#about-raspberry-pi
