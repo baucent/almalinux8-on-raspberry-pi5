@@ -1,0 +1,154 @@
+Almalinux 8.9 on Raspberry Pi 5
+===============================
+
+The 8.9 image[1] provided by Almalinux[2] runs perfectly on RPi4 but
+the boot code previously in /boot/bootcode.bin has apparently been 
+moved into the firmware so replacing bootcode.bin with another
+generic boot loader (grub? u-boot?) doesn't work with RPi5.
+
+Raspberry Pi OS[3,4] and Ubuntu[5,6] work on RPi5 (I think both due
+to Debian[7,8] "bookworm".)
+
+Rather than go to the trouble of working out how Debian etc manage
+this I thought I could leverage the working boot process from RaspiOS
+to bring up AL89. Both use systemd and would be similar except for
+the kernel versions and firmware. 
+
+I obtained 2024-03-15-raspios-bookworm-arm64.img.xz [4] and
+AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz [1].
+
+Uncompressed both with xz:
+----
+  %  xz -d -c 2024-03-15-raspios-bookworm-arm64.img.xz > \
+		/work/2024-03-15-raspios-bookworm-arm64.img
+  %  xz -d -c AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz > \
+		/work/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw
+----
+and use the loop devices to look at the images:
+----
+  #  losetup -P /dev/loop0 /work/2024-03-15-raspios-bookworm-arm64.img
+  #  losetup -P /dev/loop1 /work/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw
+----  
+
+Use fdisk (or parted /dev/loop0 print) to list the partitions:
+----
+  # fdisk -l /dev/loop0
+	Disk /dev/loop0: 5.6 GiB, 5951717376 bytes, 11624448 sectors
+	Units: sectors of 1 * 512 = 512 bytes
+	Sector size (logical/physical): 512 bytes / 512 bytes
+	I/O size (minimum/optimal): 512 bytes / 512 bytes
+	Disklabel type: dos
+	Disk identifier: 0x617a2abd
+
+	Device       Boot   Start      End  Sectors  Size Id Type
+	/dev/loop0p1         8192  1056767  1048576  512M  c W95 FAT32 (LBA)
+	/dev/loop0p2      1056768 11624447 10567680    5G 83 Linux
+
+  # fdisk -l /dev/loop1
+	Disk /dev/loop1: 2.8 GiB, 2936012800 bytes, 5734400 sectors
+	Units: sectors of 1 * 512 = 512 bytes
+	Sector size (logical/physical): 512 bytes / 512 bytes
+	I/O size (minimum/optimal): 512 bytes / 512 bytes
+	Disklabel type: dos
+	Disk identifier: 0x4ce3562e
+
+	Device       Boot  Start     End Sectors  Size Id Type
+	/dev/loop1p1 *      8192  593919  585728  286M  c W95 FAT32 (LBA)
+	/dev/loop1p2      593920 5476351 4882432  2.3G 83 Linux
+----
+
+Mount the two systems root file systems (partition 2) under /pi and /al:
+----
+  # mount /dev/loop0p2 /pi
+  # mount /dev/loop1p2 /al
+----
+
+Look at /pi/etc/fstab
+----
+  % cat /pi/etc/fstab
+	proc            /proc           proc    defaults          0       0
+	PARTUUID=617a2abd-01  /boot/firmware  vfat    defaults          0       2
+	PARTUUID=617a2abd-02  /               ext4    defaults,noatime  0       1
+----
+Note:
+  a) the PARTUUIDs are the "Disk identifier: 0x617a2abd" shown in fdisk listing.
+  b) the the first (vfat) partition is mounted under /boot/firmware not /boot.
+
+The contents of /pi/boot are
+----
+  % ls /pi/boot
+	cmdline.txt                 initrd.img-6.6.20+rpt-rpi-2712  System.map-6.6.20+rpt-rpi-v8
+	config-6.6.20+rpt-rpi-2712  initrd.img-6.6.20+rpt-rpi-v8    vmlinuz-6.6.20+rpt-rpi-2712
+	config-6.6.20+rpt-rpi-v8    issue.txt                       vmlinuz-6.6.20+rpt-rpi-v8
+	config.txt                  overlays
+	firmware                    System.map-6.6.20+rpt-rpi-2712
+----
+Note: 
+  a) /boot/firmware is empty.
+  b) cmdline.txt tells it has been moved to firmware/ ditto config.txt :)
+  c) rpi5 boots the 6.6.20+rpt-rpi-2712 kernel
+
+Mount firmware partition:
+----
+  # mount /dev/loop0p1 /pi/boot/firmware
+----
+
+List contents of /boot/firmware:
+----
+  % ls /pi/boot/firmware
+	bcm2710-rpi-2-b.dtb       bcm2712d0-rpi-5-b.dtb      fixup_cd.dat      start4cd.elf
+	bcm2710-rpi-3-b.dtb       bcm2712-rpi-5-b.dtb        fixup.dat         start4db.elf
+	bcm2710-rpi-3-b-plus.dtb  bcm2712-rpi-cm5-cm4io.dtb  fixup_db.dat      start4.elf
+	bcm2710-rpi-cm3.dtb       bcm2712-rpi-cm5-cm5io.dtb  fixup_x.dat       start4x.elf
+	bcm2710-rpi-zero-2.dtb    bootcode.bin               initramfs_2712    start_cd.elf
+	bcm2710-rpi-zero-2-w.dtb  cmdline.txt                initramfs8        start_db.elf
+	bcm2711-rpi-400.dtb       config.txt                 issue.txt         start.elf
+	bcm2711-rpi-4-b.dtb       fixup4cd.dat               kernel_2712.img   start_x.elf
+	bcm2711-rpi-cm4.dtb       fixup4.dat                 kernel8.img
+	bcm2711-rpi-cm4-io.dtb    fixup4db.dat               LICENCE.broadcom
+	bcm2711-rpi-cm4s.dtb      fixup4x.dat                overlays
+----
+Note:
+  a) firmware/initramfs_2712 is a copy of vmlinuz-6.6.20+rpt-rpi-2712
+     ditto  firmware/initramfs_2712 and initrd.img-6.6.20+rpt-rpi-2712
+  b) cmdline.txt and config.txt are here
+
+Look at cmdline.txt
+----
+  % cat /pi/boot/firmware/cmdline.txt
+
+	console=serial0,115200 console=tty1 root=PARTUUID=617a2abd-02 \
+	rootfstype=ext4 fsck.repair=yes rootwait quiet \
+	init=/usr/lib/raspberrypi-sys-mods/firstboot splash \
+	plymouth.ignore-serial-consoles
+----
+Note:
+  a) this is pretty much what gets passed to the kernel from any boot loader.
+  b) the root file system is specified by the PARTUUID
+  c) init is highjacked by /usr/lib/raspberrypi-sys-mods/firstboot
+
+Firstboot is a shell script that:
+ 
+i) generates a new random disk identifier relabels boot disk
+-----
+	fdisk "$ROOT_DEV" > /dev/null <<EOF
+		x
+		i
+		0x$DISKID
+		r
+		w
+		EOF
+------
+ii) updates /etc/fstab and /boot/firmware/cmdline.txt.
+iii) generates new sshd host keys.
+
+
+
+[1] https://repo.almalinux.org/almalinux/8/raspberrypi/images/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz
+[2] https://wiki.almalinux.org/documentation/raspberry-pi.html#about-raspberry-pi
+[3] https://www.raspberrypi.com/documentation/computers/os.html
+[4] https://downloads.raspberrypi.com/raspios_arm64/images/raspios_arm64-2024-03-15/2024-03-15-raspios-bookworm-arm64.img.xz
+[5] https://ubuntu.com/download/raspberry-pi
+[6] https://cdimage.ubuntu.com/releases/23.10/release/ubuntu-23.10-preinstalled-desktop-arm64+raspi.img.xz
+[7] https://raspi.debian.net/
+[8] https://raspi.debian.net/tested-images/
