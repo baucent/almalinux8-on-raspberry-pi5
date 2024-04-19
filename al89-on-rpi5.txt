@@ -245,7 +245,109 @@ Note: systemd appears to mount /proc anyway so omitted.
 
 Optionally remove the unused /al/swapfile as well.
 
+At this point the system would probably boot but a few other things 
+can be fixed at this point.
+The wifi firmware has to load the regulatory.db which on PiOS
+uses the /etc/alternatives arrangement (why?)
+----
+/usr/lib/firmware/regulatory.db -> /etc/alternatives/regulatory.db
+/usr/lib/firmware/regulatory.db.p7s -> /etc/alternatives/regulatory.db.p7s
+/usr/lib/firmware/cypress/cyfmac43455-sdio.bin -> /etc/alternatives/cyfmac43455-sdio.bin
+----
+and from /etc/alternatives
+----
+/etc/alternatives/regulatory.db -> /lib/firmware/regulatory.db-debian
+/etc/alternatives/regulatory.db.p7s -> /lib/firmware/regulatory.db.p7s-debian
+/etc/alternatives/cyfmac43455-sdio.bin -> /lib/firmware/cypress/cyfmac43455-sdio-standard.bin
+----
+We could just remove the link chain but will follow PiOS.
+----
+ #  ln -s /lib/firmware/regulatory.db-debian /al/etc/alternatives
+ #  ln -s /lib/firmware/regulatory.db.p7s-debian /al/etc/alternatives
+ #  ln -s /lib/firmware/cypress/cyfmac43455-sdio-standard.bin /al/etc/alternatives
+----
+Note: these symlinks won't point to anything in this environment
+      until you chroot or boot.
 
+Fix localtime on AL8
+----
+ #  ln -f -s /usr/lib/zoneinfo/Australia/Sydney /al/etc/localtime
+----
+
+Edit yum.conf to prevent linux-firmware to update
+/al/etc/yum.conf
+----
+	[main]
+	gpgcheck=1
+	installonly_limit=3
+	clean_requirements_on_remove=True
+	best=True
+	skip_if_unavailable=False
+	exclude=linux-firmware*
+----
+Probably should exclude kernel-* but kernel-tools and kernel-tools-libs
+are probably best allowed to update
+ie
+----
+	exclude=kernel-6.1* kernel-core-6.1* kernel-modules-6.1*
+----
+
+At this point unless you are running on a Pi its difficult to make
+further changes.
+i)   remove the cloud-init service and package
+ii)  change the root password
+iii) add new account
+
+If you are running under PiOS etc you can
+----
+ #  chroot /al 
+ #  yum remove cloud-init
+ ...
+ #  passwd root
+ ...
+ #  userdel almalinux
+ #  useradd -u 1000 nemo
+ #  usermod --append -G wheel nemo
+ #  passwd nemo
+ ...
+ #  exit
+-----
+otherwise umount the images
+----
+  # umount /pi/boot/firmware
+  # umount /pi
+  # losetup -d /dev/loop0
+
+  # umount /al/boot/firmware
+  # umount /al
+  # losetup -d /dev/loop1
+----
+
+You can now copy your modified AL8 image onto a SD card
+with the usual warning about the right $SDCARD_DEVICE. :)
+----
+ #  dd if=/work/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw \
+	of=/dev/$SDCARD_DEVICE bs=1024k
+----
+
+I put my sdcard in a USB adaptor and inserted into a Pi run PiOS
+and mount the partitions on the Pi and chrooted into it to make
+the modifications above.
+
+Should be able to boot off the sdcard now.
+I noticed that my install the sshd_config was modified (at boot?)
+to disallow password authentication.
+----
+	@(#) /etc/ssh/sshd_config
+	....
+	PasswordAuthentication no
+	....
+----
+Until you have keys or certificates setup change this to 'yes'
+I also ran authselect for the minimal configuration
+----
+ #  authselect select minimal
+----
 
 [1] https://repo.almalinux.org/almalinux/8/raspberrypi/images/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz
 [2] https://wiki.almalinux.org/documentation/raspberry-pi.html#about-raspberry-pi
