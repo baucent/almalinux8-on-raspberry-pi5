@@ -233,6 +233,8 @@ and remove unused options
   rootfstype=ext4 fsck.repair=yes rootwait noquiet nosplash \
   plymouth.ignore-serial-consoles
 ----
+I get "Unknown kernel command line parameters "noquiet", will be passed to user space."
+error message so probably can remove this.
 
 Replace /etc/fstab on Al8
 
@@ -296,7 +298,7 @@ At this point unless you are running on a Pi its difficult to make
 further changes.
 i)   remove the cloud-init service and package
 ii)  change the root password
-iii) add new account
+iii) add new account add to wheel group for sudo
 
 If you are running under PiOS etc you can
 ----
@@ -347,6 +349,31 @@ Until you have keys or certificates setup change this to 'yes'
 I also ran authselect for the minimal configuration
 ----
  #  authselect select minimal
+----
+
+Further stuff
+-------------
+Sudo should permit root access.
+The ethernet largely configures itself if DHCP is available but wifi
+obviously doesn't.
+I use nmtui to configure either but nmcli is another way.
+
+Configure the hostname
+----
+ #  hostnamectl --static set-hostname ruber.lares.dd
+----
+
+----
+ %  hostnamectl 
+
+   Static hostname: ruber.lares.dd
+         Icon name: computer
+        Machine ID: e83a224933a943a890e2305e4b1d76a1
+           Boot ID: 87fd4687e96f4a989f2673ed33a924a1
+  Operating System: AlmaLinux 8.9 (Midnight Oncilla)
+       CPE OS Name: cpe:/o:almalinux:almalinux:8::baseos
+            Kernel: Linux 6.6.20+rpt-rpi-2712
+      Architecture: arm64
 ----
 
 [1] https://repo.almalinux.org/almalinux/8/raspberrypi/images/AlmaLinux-8-RaspberryPi-8.9-20231127.aarch64.raw.xz

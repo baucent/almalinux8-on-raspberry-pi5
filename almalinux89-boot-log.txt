@@ -1,0 +1,120 @@
+
+Begin: Mounting root file system ... Begin: Running /scripts/local-top ... done.
+Begin: Running /scripts/local-premount ... done.
+Begin: Will now check root file system ... fsck from util-linux 2.38.1
+[/sbin/fsck.ext4 (1) -- /dev/mmcblk0p2] fsck.ext4 -y -C0 /dev/mmcblk0p2 
+e2fsck 1.47.0 (5-Feb-2023)
+_/: clean, 37614/1855392 files, 631969/7537932 blocks
+done.
+done.
+Begin: Running /scripts/local-bottom ... done.
+Begin: Running /scripts/init-bottom ... done.
+
+Welcome to AlmaLinux 8.9 (Midnight Oncilla)!
+
+[OK]  Reached target Swap.
+[OK]  Listening on initctl Compatibility Named Pipe.
+[OK]  Listening on udev Kernel Socket.
+[OK]  Listening on Journal Socket (/dev/log).
+[OK]  Created slice system-getty.slice.
+[OK]  Listening on udev Control Socket.
+[OK]  Started Forward Password Requests to Wall Directory Watch.
+[OK]  Set up automount Arbitrary Executable File Formats File System Automount Point.
+[OK]  Created slice system-serial\x2dgetty.slice.
+[OK]  Reached target Remote File Systems.
+[OK]  Listening on Process Core Dump Socket.
+[OK]  Created slice system-sshd\x2dkeygen.slice.
+[OK]  Created slice User and Session Slice.
+[OK]  Reached target Slices.
+[OK]  Listening on Journal Socket.
+         Starting Remount Root and Kernel File Systems...
+         Mounting POSIX Message Queue File System...
+         Mounting Kernel Debug File System...
+         Starting Read and set NIS domainname from /etc/sysconfig/network...
+         Starting Setup Virtual Console...
+         Starting Journal Service...
+         Starting udev Coldplug all Devices...
+         Starting Create list of required static device nodes for the current kernel...
+         Starting Load Kernel Modules...
+[OK]  Started Create list of required static device nodes for the current kernel.
+[OK]  Started Journal Service.
+[OK]  Started Remount Root and Kernel File Systems.
+[OK]  Mounted POSIX Message Queue File System.
+[OK]  Mounted Kernel Debug File System.
+[OK]  Started Read and set NIS domainname from /etc/sysconfig/network.
+[OK]  Started Load Kernel Modules.
+         Starting Apply Kernel Variables...
+         Mounting Kernel Configuration File System...
+         Starting Create Static Device Nodes in /dev...
+         Starting Load/Save Random Seed...
+         Starting Flush Journal to Persistent Storage...
+[OK]  Mounted Kernel Configuration File System.
+[OK]  Started Load/Save Random Seed.
+[OK]  Started udev Coldplug all Devices.
+[OK]  Started Apply Kernel Variables.
+[OK]  Started Create Static Device Nodes in /dev.
+[OK]  Started Flush Journal to Persistent Storage.
+[OK]  Reached target Local File Systems (Pre).
+         Starting udev Kernel Device Manager...
+[OK]  Started Setup Virtual Console.
+[OK]  Started udev Kernel Device Manager.
+         Starting Show Plymouth Boot Screen...
+[OK]  Started Show Plymouth Boot Screen.
+[OK]  Reached target Paths.
+[OK]  Reached target Local Encrypted Volumes.
+[OK]  Started Forward Password Requests to Plymouth Directory Watch.
+[OK]  Reached target Sound Card.
+[OK]  Found device /dev/ttyAMA10.
+[OK]  Listening on Load/Save RF Kill Switch Status /dev/rfkill Watch.
+[OK]  Found device /dev/disk/by-partuuid/4ce3562e-01.
+         Mounting /boot/firmware...
+[OK]  Mounted /boot/firmware.
+[OK]  Reached target Local File Systems.
+         Starting Tell Plymouth To Write Out Runtime Data...
+         Starting Create Volatile Files and Directories...
+[OK]  Started Tell Plymouth To Write Out Runtime Data.
+[OK]  Started Create Volatile Files and Directories.
+         Starting Security Auditing Service...
+[OK]  Started Security Auditing Service.
+         Starting Update UTMP about System Boot/Shutdown...
+         Starting Load/Save RF Kill Switch Status...
+[OK]  Started Load/Save RF Kill Switch Status.
+[OK]  Started Update UTMP about System Boot/Shutdown.
+[OK]  Reached target System Initialization.
+[OK]  Started dnf makecache --timer.
+[OK]  Started Daily Cleanup of Temporary Directories.
+[OK]  Listening on SSSD Kerberos Cache Manager responder socket.
+[OK]  Started daily update of the root trust anchor for DNSSEC.
+[OK]  Reached target Timers.
+[OK]  Listening on D-Bus System Message Bus Socket.
+[OK]  Reached target Sockets.
+[OK]  Reached target Basic System.
+         Starting Restore /run/initramfs on shutdown...
+[OK]  Started irqbalance daemon.
+[OK]  Reached target sshd-keygen.target.
+[OK]  Reached target User and Group Name Lookups.
+         Starting Login Service...
+[OK]  Started D-Bus System Message Bus.
+         Starting Bluetooth service...
+         Starting firewalld - dynamic firewall daemon...
+         Starting NTP client/server...
+[OK]  Started Restore /run/initramfs on shutdown.
+[OK]  Started Login Service.
+[OK]  Started Bluetooth service.
+         Starting Hostname Service...
+[OK]  Reached target Bluetooth.
+[OK]  Started NTP client/server.
+[OK]  Started Hostname Service.
+[OK]  Started firewalld - dynamic firewall daemon.
+[OK]  Reached target Network (Pre).
+         Starting Network Manager...
+[OK]  Started Network Manager.
+[OK]  Reached target Network.
+         Starting OpenSSH server daemon...
+         Starting Dynamic System Tuning Daemon...
+         Starting Permit User Sessions...
+         Starting Network Manager Wait Online...
+[OK]  Started Permit User Sessions.
+         Starting Terminate Plymouth Boot Screen...
+[OK]  Started Command Scheduler.
+         Starting Hold until boot process finishes up...
