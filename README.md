@@ -7,7 +7,12 @@ https://github.com/AlmaLinux/raspberry-pi
 Disk image for AL8.10 found here
 https://repo.almalinux.org/rpi/images/AlmaLinux-8-RaspberryPi-latest.aarch64.raw.xz
 
-vvv Can be ignored vvv
+On the RPi
+AL8.10 has kernel-6.6.28 glibc-2.28 (raspberrypi2-kernel4-6.6.28-20240423.v8.1.el8.aarch64)
+AL8.9  had kernel-6.1.31 glibc-2.28 (raspberrypi2-kernel4-6.1.31-v8.1.el8.aarch64)
+[ AL8 on x86_64  has kernel-4.18.0]
+
+**Below** can now be ignored
 
 # Note
 I have Almalinux 8.9 running on RPi5 and I am documenting
