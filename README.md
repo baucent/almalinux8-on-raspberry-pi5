@@ -1,3 +1,14 @@
+# UPDATE 2024-06-07 : Almalinux 8.10 on Rpi5 now supported!
+See 
+https://github.com/AlmaLinux/raspberry-pi/issues/40#issuecomment-2154657605
+
+https://github.com/AlmaLinux/raspberry-pi
+
+Disk image for AL8.10 found here
+https://repo.almalinux.org/rpi/images/AlmaLinux-8-RaspberryPi-latest.aarch64.raw.xz
+
+vvv Can be ignored vvv
+
 # Note
 I have Almalinux 8.9 running on RPi5 and I am documenting
 the particular skulduggery required.
